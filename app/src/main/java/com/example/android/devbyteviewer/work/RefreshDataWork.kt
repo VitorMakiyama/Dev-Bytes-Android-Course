@@ -25,6 +25,11 @@ import com.example.android.devbyteviewer.repository.VideosRepository
 import retrofit2.HttpException
 
 class RefreshDataWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
+    // Unique name for the work
+    companion object {
+        const val WORK_NAME = "RefreshDataWork"
+    }
+
     /**
      * A coroutine-friendly method to do your work.
      */
