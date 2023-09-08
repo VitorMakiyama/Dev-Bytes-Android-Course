@@ -29,6 +29,11 @@ import kotlinx.coroutines.withContext
 
 /**
  * Repository for fetching devbyte videos from the network and storing them on disk
+ *
+ * Repository modules handle data operations. They provide a clean API so that the rest of the app
+ * can retrieve this data easily. They know where to get data from and what API calls to make
+ * when data is updated. You can consider repositories to be mediators between different data
+ * sources, in our case it mediates between a network API and an offline database cache.
  */
 class VideosRepository(private val database: VideosDatabase) {
     /**
