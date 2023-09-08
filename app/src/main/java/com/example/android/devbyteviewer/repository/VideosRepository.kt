@@ -16,3 +16,44 @@
  */
 
 package com.example.android.devbyteviewer.repository
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Transformations
+import com.example.android.devbyteviewer.database.VideosDatabase
+import com.example.android.devbyteviewer.database.asDomainModel
+import com.example.android.devbyteviewer.domain.Video
+import com.example.android.devbyteviewer.network.Network
+import com.example.android.devbyteviewer.network.asDatabaseModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+/**
+ * Repository for fetching devbyte videos from the network and storing them on disk
+ */
+class VideosRepository(private val database: VideosDatabase) {
+    /**
+     * A playlist of videos that can be shown on the screen
+     */
+    // Transformations will only happen when an activity or fragment is listening, making it safe to be declared as a property
+    val videos: LiveData<List<Video>> = Transformations.map (database.videoDao.getVideos()) {
+        it.asDomainModel()
+    }
+
+    /**
+     * Refresh the videos stored in the offline cache.
+     *
+     * This function uses the IO dispatcher to ensure the database insert operation
+     * happens on the IO dispatcher. By switching to the IO d. using 'withContext' this
+     * function is now safe to call from any thread including the Main.
+     *
+     * To actually load the videos for use, observe [videos]
+     */
+    suspend fun refreshVideos() {
+        // Makes this function run on the IO dipsatcher, making it safe to be called from any dispatcher, even Main
+        withContext(Dispatchers.IO) {
+            val playlist = Network.devbytes.getPlaylist().await()
+            database.videoDao.insertAll(*playlist.asDatabaseModel())
+            // Notice that the * is the 'spread operator'. It allows u to pass an array to a function that expects varargs
+        }
+    }
+}
